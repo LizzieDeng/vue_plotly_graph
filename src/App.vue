@@ -1,31 +1,25 @@
 <template>
   <div id="app">
-<!--    <img src="./assets/logo.png">-->
-<!--    <router-view/>-->
     <div id="contain">
-        <el-button type="primary" plain @click.native="refreshGraph" style="float: left">刷新散点图</el-button>
-        <el-button type="primary" plain @click.native="playAnimate"  style="margin-left: 10px; margin-right: 10px">播放</el-button>
-        <el-button type="primary" plain @click.native="stopAnimate" >暂停</el-button>
+        <el-button type="primary" plain @click.native="refreshGraph">刷新散点图</el-button>
     </div>
-     <scattergraph :propData="plotInfo" divId="plot"  style="height: 800px"></scattergraph>
+     <scatterGraph :propData="plotInfo" divId="plot"  style="height: 800px"></scatterGraph>
      <div id="time"> {{status}}</div>
   </div>
 </template>
 
 <script>
-import Scattergraph from './components/scatterGraph'
-import event from './event'
-
+import scatterGraph from './components/scatterGraph'
 export default {
   name: 'App',
-  components: {Scattergraph},
+  components: {scatterGraph},
   data: function () {
     return ({
       plotInfo: {
         data: [{
-          x: [0],
-          y: [0],
-          z: [0],
+          x: [30, 50, 20, 60, 44, 88, 98, 22],
+          y: [30, 50, 20, 60, 44, 88, 70, 22],
+          z: [30, 50, 20, 10, 44, 19, 9, 22],
           type: 'scatter3d',
           mode: 'markers',
           showlegend: false
@@ -39,7 +33,6 @@ export default {
   },
   mounted () {
     this.updatePlot()
-    // this.getOptions()
   },
   methods: {
     updatePlot () {
@@ -54,13 +47,22 @@ export default {
         y.push(rand2)
         z.push(rand3)
       }
-      let data = [{
+      let data = [{ x: [0],
+        y: [0],
+        z: [0],
+        name: '动画',
+        type: 'scatter3d',
+        mode: 'markers',
+        marker: {size: 0},
+        opacity: 0
+      }, {
         x: x,
         y: y,
         z: z,
         type: 'scatter3d',
+        name: '散点',
         mode: 'markers',
-        showlegend: false
+        opacity: 0.5
       }]
       let layout = {
         height: 700,
@@ -72,6 +74,39 @@ export default {
           r: 25,
           l: 25
         },
+        scene: {
+          aspectmode: 'data',
+          xaxis: {
+            range: [0, 100]
+          },
+          yaxis: {
+            range: [0, 100]
+          },
+          zaxis: {
+            range: [0, 100]
+          }
+        },
+        updatemenus: [{
+          type: 'buttons',
+          active: 0,
+          buttons: [
+            {label: '开始',
+              method: 'animate',
+              args: [null,
+                {frame: {duration: 200, redraw: true},
+                  fromcurrent: true,
+                  mode: 'immediate',
+                  transition: {duration: 300, easing: 'quadratic-in-out'}}]
+            },
+            {label: '暂停',
+              method: 'animate',
+              args: [[null],
+                {frame: {duration: 0, redraw: false},
+                  mode: 'immediate',
+                  transition: {duration: 0}}]
+            }
+          ]
+        }],
         paper_bgcolor: '#ECEFF1'
       }
       let config = {
@@ -79,15 +114,6 @@ export default {
         responsive: true
       }
       this.plotInfo = {data: data, layout: layout, config: config}
-      console.log('updatePlot', this.plotInfo.data[0].x)
-    },
-    playAnimate () {
-      let divId = 'plot'
-      console.log('emit animate', this.plotInfo.data[0].x)
-      event.$emit('animate', [divId, this.plotInfo.data])
-    },
-    stopAnimate () {
-      event.$emit('stop')
     },
     refreshGraph () {
       this.updatePlot()
